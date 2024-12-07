@@ -56,24 +56,24 @@ public class UnsafeX{
 	}
 
 	public int addressSize() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-		return addressSize.invoke(this.unsafe);
+		return (int)addressSize.invoke(this.unsafe);
 
 	}
 
 	public int getInt(long address) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-		return getInt.invoke(this.unsafe, address);
+		return (int)getInt.invoke(this.unsafe, address);
 	}
 
 	public int getInt(Object obj, long offset) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-		return getInt1.invoke(this.unsafe, obj, offset);
+		return (int)getInt1.invoke(this.unsafe, obj, offset);
 	}
 
 	public long getLong(long address) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-		return getLong.invoke(this.unsafe, address);
+		return (int)getLong.invoke(this.unsafe, address);
 	}
 
 	public long getLong(Object obj, long offset) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-		return getLong1.invoke(this.unsafe, obj, offset);
+		return (int)getLong1.invoke(this.unsafe, obj, offset);
 	}
 
 	public static UnsafeX getUnsafe() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException{
