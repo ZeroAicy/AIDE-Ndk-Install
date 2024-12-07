@@ -1,0 +1,2 @@
+
+1. 需要更改Main.java的main方法的 ndkPath变量为 Ndk具体路径
