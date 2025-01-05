@@ -73,10 +73,12 @@ public class Main {
 	// Zip 根目录为 android-ndk-xxx 例如 android-ndk-r24 android-ndk-r27b
 	// 唯一主要修改的
 	static String NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/AIDE+Ndk/android-sdk/ndk/android-ndk-r27b-aarch64.zip";
-
+	
 
 	public static void main( String[] args ) throws Exception {
-
+		// 如果安装多个 Ndk，在此处赋值
+		// NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/NDK-R24/android-ndk-r24-aarch64.zip";
+		
 
 		File ndkZipFile = new File(NdkZipFilePath);
 		if ( !ndkZipFile.exists() ) {
