@@ -101,7 +101,8 @@ public class Main {
             busyboxInstallDir = new File(filesDir, "usr/bin/applets");
         } else {
             homeDir = new File(filesDir, "home");
-            busyboxInstallDir = new File(filesDir + "/usr/bin");
+			// 防止覆盖 Termux版的 usr/bin目录
+            busyboxInstallDir = new File(filesDir + "/usr/xbin");
         }
 
         if ( homeDir.isFile() ) {
