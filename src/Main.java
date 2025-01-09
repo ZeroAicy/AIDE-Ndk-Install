@@ -102,7 +102,7 @@ public class Main {
         } else {
             homeDir = new File(filesDir, "home");
 			// 防止覆盖 Termux版的 usr/bin目录
-            busyboxInstallDir = new File(filesDir + "/usr/xbin");
+            busyboxInstallDir = new File(filesDir + "/usrx/bin");
         }
 
         if ( homeDir.isFile() ) {
