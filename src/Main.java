@@ -489,7 +489,7 @@ public class Main {
 
 		result.addAll(arguments);
 
-		return arguments;
+		return result;
 	}
 
 	private static void putCustomizeEnv(Map<String, String> environment) {
