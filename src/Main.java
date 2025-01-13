@@ -335,8 +335,8 @@ public class Main {
 
 		processBuilder.directory(busyboxInstallDir).command(args);
 
-		processBuilder.start();
 		processBuilder.redirectError(new File(busyboxInstallDir, "installLog.txt"));
+		processBuilder.start();
 	}
 
 	public static void writeResource(String resourceName, File outputFile) throws IOException {
@@ -471,7 +471,7 @@ public class Main {
 
 	public static List<String> setupShellCommandArguments(List<String> arguments) {
 
-		if (Main.PROOT_MODE) {
+		if (!Main.PROOT_MODE) {
 			return arguments;
 		}
 
