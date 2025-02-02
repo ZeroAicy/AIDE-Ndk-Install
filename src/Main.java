@@ -115,6 +115,7 @@ public class Main {
 			// 删除 busyboxInstallDir目录
 			FileUtil.deleteFolder(busyboxInstallDir);
 		}
+		
 		// 创建文件夹
 		if (!busyboxInstallDir.exists()) {
 			busyboxInstallDir.mkdirs();
@@ -317,7 +318,11 @@ public class Main {
 	}
 
 	private static void installBusybox(File busyboxInstallDir, File busyboxFile) throws IOException {
-
+		
+		if( !busyboxInstallDir.exists() ){
+			busyboxInstallDir.mkdirs();
+		}
+		
 		List<String> args = new ArrayList<>();
 
 		args.add(busyboxFile.getAbsolutePath());
@@ -325,12 +330,12 @@ public class Main {
 		args.add("--install");
 		args.add("-s");
 		args.add(".");
-
-
+		
 		ProcessBuilder processBuilder = new ProcessBuilder();
 
 		// proot模式
 		putCustomizeEnv(processBuilder.environment());
+		
 		args = setupShellCommandArguments(args);
 
 		processBuilder.directory(busyboxInstallDir).command(args);
@@ -482,8 +487,8 @@ public class Main {
 		result.add(Main.PROOT_PATH);
 
 		result.add("--rootfs=/");
-		result.add("--bind=" + PACKAGE_NAME_PATH + ":/data/data/com.termux");
-		result.add("--bind=" + PACKAGE_NAME_PATH + ":/data/user/0/com.termux");
+		// result.add("--bind=" + PACKAGE_NAME_PATH + ":/data/data/com.termux");
+		// result.add("--bind=" + PACKAGE_NAME_PATH + ":/data/user/0/com.termux");
 
 		result.add("--bind=" + PACKAGE_NAME_PATH + "/cache" + ":/linkerconfig");
 
