@@ -7,6 +7,7 @@
 <classpathentry kind="lib" path="libs/cmake-3.10.2-data.jar"/>
 <classpathentry kind="lib" path="libs/cmake-3.18.1-data.jar"/>
 <classpathentry kind="lib" path="libs/cmake-3.22.1-data.jar"/>
+<classpathentry kind="lib" path="libs/cmake-3.25.1-data.jar"/>
 <classpathentry kind="lib" path="libs/cmake-3.29.3-data.jar"/>
 <classpathentry kind="lib" path="libs/cmake-3.31.4-data.jar"/>
 </classpath>
