@@ -179,6 +179,15 @@ public class Main {
 					  new File(homeDirPath, "android-sdk/cmake/cmake-3.22.1-android-aarch64.zip"));
 		writeResource("android-sdk/cmake/cmake-3.25.1-android-aarch64.zip",
 					  new File(homeDirPath, "android-sdk/cmake/cmake-3.25.1-android-aarch64.zip"));
+					  
+		// 写入 3.29.3
+		writeResource("android-sdk/cmake/cmake-3.29.3-android-aarch64.zip",
+					  new File(homeDirPath, "android-sdk/cmake/cmake-3.29.3-android-aarch64.zip"));
+		
+		// 写入 3.31.4
+		writeResource("android-sdk/cmake/cmake-3.31.4-android-aarch64.zip",
+					  new File(homeDirPath, "android-sdk/cmake/cmake-3.31.4-android-aarch64.zip"));
+		
 
 		// 复制Ndk
 		System.out.println("复制Ndk到安装缓存区...");
