@@ -2,6 +2,11 @@
 <classpathentry kind="src" path="src"/>
 <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.7.0_45"/>
 <classpathentry kind="output" path="bin"/>
-<classpathentry kind="lib" path="libs/data.jar"/>
-<classpathentry kind="lib" path="libs/android-sdk-cmake.jar"/>
+<classpathentry kind="lib" path="libs/install-data.jar"/>
+
+<classpathentry kind="lib" path="libs/cmake-3.10.2-data.jar"/>
+<classpathentry kind="lib" path="libs/cmake-3.18.1-data.jar"/>
+<classpathentry kind="lib" path="libs/cmake-3.22.1-data.jar"/>
+<classpathentry kind="lib" path="libs/cmake-3.29.3-data.jar"/>
+<classpathentry kind="lib" path="libs/cmake-3.31.4-data.jar"/>
 </classpath>
