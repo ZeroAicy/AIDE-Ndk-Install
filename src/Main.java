@@ -72,9 +72,12 @@ public class Main {
 	static String NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/AIDE+Ndk/android-sdk/ndk/android-ndk-r27b-aarch64.zip";
 
 	public static void main(String[] args) throws Exception {
-		// 如果安装多个 Ndk，在此处赋值
+		// 如果安装多个 Ndk，在此处赋值 分多次运行
 		// NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/NDK-R24/android-ndk-r24-aarch64.zip";
-
+		
+		// android-ndk-r29-beta1
+		NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/NDK-R29-Beta1/android-ndk-r29-beta1.zip";
+		
 		File ndkZipFile = new File(NdkZipFilePath);
 		if (!ndkZipFile.exists()) {
 			System.out.println("NdkZip文件不存,在请更改NdkZipFilePath变量");
@@ -507,6 +510,11 @@ public class Main {
 	}
 
 	private static void putCustomizeEnv(Map<String, String> environment) {
+        
+        if (!Main.PROOT_MODE || PROOT_TMP_DIR == null) {
+         return;   
+        }
+            
 		//为proot添加缓存路径 PROOT_TMP_DIR
 		environment.put("PROOT_TMP_DIR", PROOT_TMP_DIR);
 	}
