@@ -76,7 +76,7 @@ public class Main {
 		// NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/NDK-R24/android-ndk-r24-aarch64.zip";
 		
 		// android-ndk-r29-beta1
-		NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/NDK-R29-Beta1/android-ndk-r29-beta1.zip";
+		// NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/NDK-R29-Beta1/android-ndk-r29-beta1.zip";
 		
 		File ndkZipFile = new File(NdkZipFilePath);
 		if (!ndkZipFile.exists()) {
