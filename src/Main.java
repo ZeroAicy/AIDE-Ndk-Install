@@ -55,8 +55,10 @@ public class Main {
 		return Build.VERSION.SDK_INT >= 26 ? ndkVersion + 2 : ndkVersion;
 	}
 
-	public static final String busyboxResourceName = "/data/busybox";
-	public static final String ndkInstallShellResourceName = "/data/ndk-install.sh";
+	public static final String Version = "2.6.1";
+	
+	public static final String busyboxResourceName = "data/busybox";
+	public static final String ndkInstallShellResourceName = "data/ndk-install.sh";
 
 	// Ndk 版本名称 例如 r24 r27b
 	// $NDK_VERSION_NAME环境变量
@@ -74,10 +76,11 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 		// 如果安装多个 Ndk，在此处赋值 分多次运行
 		// NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/NDK-R24/android-ndk-r24-aarch64.zip";
-		
+
 		// android-ndk-r29-beta1
 		// NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/NDK-R29-Beta1/android-ndk-r29-beta1.zip";
 		
+		System.out.println(String.format("Ndk Install Version: -> %s", Version));
 		File ndkZipFile = new File(NdkZipFilePath);
 		if (!ndkZipFile.exists()) {
 			System.out.println("NdkZip文件不存,在请更改NdkZipFilePath变量");
@@ -118,7 +121,7 @@ public class Main {
 			// 删除 busyboxInstallDir目录
 			FileUtil.deleteFolder(busyboxInstallDir);
 		}
-		
+
 		// 创建文件夹
 		if (!busyboxInstallDir.exists()) {
 			busyboxInstallDir.mkdirs();
@@ -175,28 +178,27 @@ public class Main {
 		// 写入cmake
 		System.out.println("写入cmake...");
 		writeResource("android-sdk/cmake/cmake-3.10.2-android-aarch64.zip",
-					  new File(homeDirPath, "android-sdk/cmake/cmake-3.10.2-android-aarch64.zip"));
+				new File(homeDirPath, "android-sdk/cmake/cmake-3.10.2-android-aarch64.zip"));
 		writeResource("android-sdk/cmake/cmake-3.18.1-android-aarch64.zip",
-					  new File(homeDirPath, "android-sdk/cmake/cmake-3.18.1-android-aarch64.zip"));
+				new File(homeDirPath, "android-sdk/cmake/cmake-3.18.1-android-aarch64.zip"));
 		writeResource("android-sdk/cmake/cmake-3.22.1-android-aarch64.zip",
-					  new File(homeDirPath, "android-sdk/cmake/cmake-3.22.1-android-aarch64.zip"));
+				new File(homeDirPath, "android-sdk/cmake/cmake-3.22.1-android-aarch64.zip"));
 		writeResource("android-sdk/cmake/cmake-3.25.1-android-aarch64.zip",
-					  new File(homeDirPath, "android-sdk/cmake/cmake-3.25.1-android-aarch64.zip"));
-					  
+				new File(homeDirPath, "android-sdk/cmake/cmake-3.25.1-android-aarch64.zip"));
+
 		// 写入 3.29.3
 		writeResource("android-sdk/cmake/cmake-3.29.3-android-aarch64.zip",
-					  new File(homeDirPath, "android-sdk/cmake/cmake-3.29.3-android-aarch64.zip"));
-		
+				new File(homeDirPath, "android-sdk/cmake/cmake-3.29.3-android-aarch64.zip"));
+
 		// 写入 3.31.4
 		writeResource("android-sdk/cmake/cmake-3.31.4-android-aarch64.zip",
-					  new File(homeDirPath, "android-sdk/cmake/cmake-3.31.4-android-aarch64.zip"));
-		
+				new File(homeDirPath, "android-sdk/cmake/cmake-3.31.4-android-aarch64.zip"));
 
 		// 复制Ndk
 		System.out.println("复制Ndk到安装缓存区...");
 		FileInputStream ndkZipFileInputStream = new FileInputStream(ndkZipFile);
 		FileOutputStream ndkZipFileOutputStream = new FileOutputStream(
-			new File(homeDir, String.format("android-ndk-%s-aarch64.zip", NDK_VERSION_NAME)));
+				new File(homeDir, String.format("android-ndk-%s-aarch64.zip", NDK_VERSION_NAME)));
 		IOUtils.streamTransfer(ndkZipFileInputStream, ndkZipFileOutputStream, true);
 
 		// 运行脚本 
@@ -250,7 +252,7 @@ public class Main {
 				}
 			}
 			android.system.Os.symlink(homeDirPath + "/android-sdk/ndk/" + NDK_VERSION_CODE,
-									  android_ndk_aide_dir.getAbsolutePath());
+					android_ndk_aide_dir.getAbsolutePath());
 			installedFile.createNewFile();
 		} catch (ErrnoException e) {
 			System.out.println("链接失败");
@@ -278,7 +280,6 @@ public class Main {
 
 		// proot模式
 		argsList = setupShellCommandArguments(argsList);
-
 
 		processBuilder.command(argsList);
 		processBuilder.redirectErrorStream(true);
@@ -330,11 +331,11 @@ public class Main {
 	}
 
 	private static void installBusybox(File busyboxInstallDir, File busyboxFile) throws IOException {
-		
-		if( !busyboxInstallDir.exists() ){
+
+		if (!busyboxInstallDir.exists()) {
 			busyboxInstallDir.mkdirs();
 		}
-		
+
 		List<String> args = new ArrayList<>();
 
 		args.add(busyboxFile.getAbsolutePath());
@@ -342,12 +343,12 @@ public class Main {
 		args.add("--install");
 		args.add("-s");
 		args.add(".");
-		
+
 		ProcessBuilder processBuilder = new ProcessBuilder();
 
 		// proot模式
 		putCustomizeEnv(processBuilder.environment());
-		
+
 		args = setupShellCommandArguments(args);
 
 		processBuilder.directory(busyboxInstallDir).command(args);
@@ -355,7 +356,9 @@ public class Main {
 		processBuilder.redirectError(new File(busyboxInstallDir, "installLog.txt"));
 		processBuilder.start();
 	}
-
+	
+	
+	public static final ClassLoader curClassLoader = Main.class.getClassLoader();
 	public static void writeResource(String resourceName, File outputFile) throws IOException {
 		outputFile.setReadable(true, false);
 		outputFile.setWritable(true, false);
@@ -368,8 +371,13 @@ public class Main {
 			outputFile.delete();
 		}
 
+		InputStream resourceAsStream = curClassLoader.getResourceAsStream(resourceName);
+
+		if (resourceAsStream == null) {
+			throw new Error(String.format("%s 资源不存在", resourceName));
+		}
+
 		FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
-		InputStream resourceAsStream = Main.class.getResourceAsStream(resourceName);
 		IOUtils.streamTransfer(resourceAsStream, fileOutputStream, true);
 
 		outputFile.setReadable(true, false);
@@ -510,11 +518,11 @@ public class Main {
 	}
 
 	private static void putCustomizeEnv(Map<String, String> environment) {
-        
-        if (!Main.PROOT_MODE || PROOT_TMP_DIR == null) {
-         return;   
-        }
-            
+
+		if (!Main.PROOT_MODE || PROOT_TMP_DIR == null) {
+			return;
+		}
+
 		//为proot添加缓存路径 PROOT_TMP_DIR
 		environment.put("PROOT_TMP_DIR", PROOT_TMP_DIR);
 	}
