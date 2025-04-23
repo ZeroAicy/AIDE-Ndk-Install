@@ -55,7 +55,7 @@ public class Main {
 		return Build.VERSION.SDK_INT >= 26 ? ndkVersion + 2 : ndkVersion;
 	}
 
-	public static final String Version = "2.7.0";
+	public static final String Version = "2.7.2";
 
 	public static final String busyboxResourceName = "data/busybox";
 	public static final String ndkInstallShellResourceName = "data/ndk-install.sh";
@@ -76,12 +76,11 @@ public class Main {
 	public static void main(String[] args) {
 		try {
 			install(args);
-		}
-		catch (Throwable e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void install(String[] args) throws Throwable {
 		// 如果安装多个 Ndk，在此处赋值 分多次运行
 		// NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/NDK-R24/android-ndk-r24-aarch64.zip";
@@ -111,9 +110,9 @@ public class Main {
 		boolean noContextMode = context == null;
 
 		File filesDir = noContextMode
-			? new File(System.getenv().getOrDefault("HOME", "/home")).getParentFile()
+				? new File(System.getenv().getOrDefault("HOME", "/home")).getParentFile()
 				: context.getFilesDir();
-		
+
 		String filesDirPath = filesDir.getAbsolutePath();
 		if (filesDirPath.length() < 2) {
 			System.out.printf("获取路径错误, filesDirPath -> %s \n", filesDirPath);
@@ -126,7 +125,12 @@ public class Main {
 		final File homeDir;
 
 		// 兼容AIDE Pro
-		String packageName = noContextMode ? "unknown" : context.getPackageName();
+		String packageName;
+		if (noContextMode) {
+			packageName = filesDir.getParentFile().getName();
+		} else {
+			packageName = context.getPackageName();
+		}
 
 		if ("aidepro.top".equals(packageName)) {
 			homeDir = new File(filesDir, "framework");
@@ -240,16 +244,22 @@ public class Main {
 		System.out.println("添加执行权限...");
 		Runtime.getRuntime().exec("chmod -R 777 " + homeDirPath);
 
-		if (noContextMode) {
-			System.out.println("无 Context 模式 安装结束");
-			return;
-		}
-
 		// link_aide_ndk
 		// 使用 ln 链接 Ndk 可以复用gradle ndk
 		try {
 			// AIDE Ndk安装路径
-			File aideNdkInstallDir = getAideNdkInstallDir(context);
+			File aideNdkInstallDir;
+			if (noContextMode) {
+				if (TextUtils.isEmpty(packageName) || !"aidepro.top".equals(packageName)
+						|| packageName.startsWith("io.github.zeroaicy.aide")) {
+					System.out.printf("包名计算错误 packageName -> %s，是无Context 模式 安装结束\n", packageName);
+					return;
+				}
+				aideNdkInstallDir = new File(filesDir.getParentFile(), "no_backup/ndksupport-1710240003");
+			} else {
+				aideNdkInstallDir = getAideNdkInstallDir(context);
+			}
+
 			aideNdkInstallDir.mkdirs();
 
 			File installedFile = new File(aideNdkInstallDir, ".installed");
