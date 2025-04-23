@@ -55,8 +55,8 @@ public class Main {
 		return Build.VERSION.SDK_INT >= 26 ? ndkVersion + 2 : ndkVersion;
 	}
 
-	public static final String Version = "2.6.1";
-	
+	public static final String Version = "2.7.0";
+
 	public static final String busyboxResourceName = "data/busybox";
 	public static final String ndkInstallShellResourceName = "data/ndk-install.sh";
 
@@ -73,23 +73,52 @@ public class Main {
 	// 唯一主要修改的
 	static String NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/AIDE+Ndk/android-sdk/ndk/android-ndk-r27b-aarch64.zip";
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) {
+		try {
+			install(args);
+		}
+		catch (Throwable e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void install(String[] args) throws Throwable {
 		// 如果安装多个 Ndk，在此处赋值 分多次运行
 		// NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/NDK-R24/android-ndk-r24-aarch64.zip";
 
 		// android-ndk-r29-beta1
 		// NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/NDK-R29-Beta1/android-ndk-r29-beta1.zip";
-		
+		if (args != null && args.length > 0) {
+			NdkZipFilePath = args[0];
+		}
+
 		System.out.println(String.format("Ndk Install Version: -> %s", Version));
+
 		File ndkZipFile = new File(NdkZipFilePath);
 		if (!ndkZipFile.exists()) {
 			System.out.println("NdkZip文件不存,在请更改NdkZipFilePath变量");
 			return;
 		}
 
-		Context context = ContextUtil.getContext();
+		Context context = null;
 
-		File filesDir = context.getFilesDir();
+		try {
+			context = ContextUtil.getContext();
+		} catch (Throwable e) {
+			System.out.println("getContext 错误, 启用无Context模式");
+		}
+
+		boolean noContextMode = context == null;
+
+		File filesDir = noContextMode
+			? new File(System.getenv().getOrDefault("HOME", "/home")).getParentFile()
+				: context.getFilesDir();
+		
+		String filesDirPath = filesDir.getAbsolutePath();
+		if (filesDirPath.length() < 2) {
+			System.out.printf("获取路径错误, filesDirPath -> %s \n", filesDirPath);
+			return;
+		}
 
 		// busybox 安装目录
 		final File busyboxInstallDir;
@@ -97,7 +126,9 @@ public class Main {
 		final File homeDir;
 
 		// 兼容AIDE Pro
-		if ("aidepro.top".equals(context.getPackageName())) {
+		String packageName = noContextMode ? "unknown" : context.getPackageName();
+
+		if ("aidepro.top".equals(packageName)) {
 			homeDir = new File(filesDir, "framework");
 			busyboxInstallDir = new File(filesDir, "usr/bin/applets");
 		} else {
@@ -209,11 +240,14 @@ public class Main {
 		System.out.println("添加执行权限...");
 		Runtime.getRuntime().exec("chmod -R 777 " + homeDirPath);
 
+		if (noContextMode) {
+			System.out.println("无 Context 模式 安装结束");
+			return;
+		}
+
 		// link_aide_ndk
 		// 使用 ln 链接 Ndk 可以复用gradle ndk
-
 		try {
-
 			// AIDE Ndk安装路径
 			File aideNdkInstallDir = getAideNdkInstallDir(context);
 			aideNdkInstallDir.mkdirs();
@@ -236,29 +270,32 @@ public class Main {
 					FileUtil.deleteFolder(binDir);
 				}
 			}
+			try {
+				String binDirPath = binDir.getAbsolutePath();
+				// symlink时必须保证 newPath不存在 
+				android.system.Os.symlink(busyboxInstallDirPath, binDirPath);
 
-			String binDirPath = binDir.getAbsolutePath();
-			// symlink时必须保证 newPath不存在 
-			android.system.Os.symlink(busyboxInstallDirPath, binDirPath);
-
-			File android_ndk_aide_dir = new File(aideNdkInstallDir, "android-ndk-aide");
-			if (binDir.exists()) {
-				// android_ndk_aide_dir也是是目录
-				// 软链接 不能递归删除
-				if (Files.isSymbolicLink(android_ndk_aide_dir.toPath())) {
-					android_ndk_aide_dir.delete();
-				} else {
-					FileUtil.deleteFolder(android_ndk_aide_dir);
+				File android_ndk_aide_dir = new File(aideNdkInstallDir, "android-ndk-aide");
+				if (binDir.exists()) {
+					// android_ndk_aide_dir也是是目录
+					// 软链接 不能递归删除
+					if (Files.isSymbolicLink(android_ndk_aide_dir.toPath())) {
+						android_ndk_aide_dir.delete();
+					} else {
+						FileUtil.deleteFolder(android_ndk_aide_dir);
+					}
 				}
+				android.system.Os.symlink(homeDirPath + "/android-sdk/ndk/" + NDK_VERSION_CODE,
+						android_ndk_aide_dir.getAbsolutePath());
+				installedFile.createNewFile();
+			} catch (ErrnoException e) {
+				System.out.println("链接失败");
+				e.printStackTrace();
+				return;
 			}
-			android.system.Os.symlink(homeDirPath + "/android-sdk/ndk/" + NDK_VERSION_CODE,
-					android_ndk_aide_dir.getAbsolutePath());
-			installedFile.createNewFile();
-		} catch (ErrnoException e) {
-			System.out.println("链接失败");
+		} catch (Throwable e) {
+			System.out.println("AIDE-NDK(AIDE ndk-build) 安装失败");
 			e.printStackTrace();
-
-			return;
 		}
 
 		System.out.println("安装结束");
@@ -356,8 +393,7 @@ public class Main {
 		processBuilder.redirectError(new File(busyboxInstallDir, "installLog.txt"));
 		processBuilder.start();
 	}
-	
-	
+
 	public static final ClassLoader curClassLoader = Main.class.getClassLoader();
 	public static void writeResource(String resourceName, File outputFile) throws IOException {
 		outputFile.setReadable(true, false);
@@ -455,6 +491,10 @@ public class Main {
 	public static String PROOT_TMP_DIR;
 
 	private static void initProotEnv(Context currentPackageContext) {
+
+		if (currentPackageContext == null) {
+			return;
+		}
 
 		if (Main.PROOT_PATH != null) {
 			return;
