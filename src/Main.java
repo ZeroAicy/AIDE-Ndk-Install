@@ -22,6 +22,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.io.FileInputStream;
 import android.text.TextUtils;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class Main {
 
@@ -55,7 +57,7 @@ public class Main {
 		return Build.VERSION.SDK_INT >= 26 ? ndkVersion + 2 : ndkVersion;
 	}
 
-	public static final String Version = "2.7.2";
+	public static final String Version = "2.7.6";
 
 	public static final String busyboxResourceName = "data/busybox";
 	public static final String ndkInstallShellResourceName = "data/ndk-install.sh";
@@ -108,10 +110,11 @@ public class Main {
 		}
 
 		boolean noContextMode = context == null;
-
-		File filesDir = noContextMode
-				? new File(System.getenv().getOrDefault("HOME", "/home")).getParentFile()
-				: context.getFilesDir();
+		
+		// HOME环境变量
+		String HOME_ENV = System.getenv().getOrDefault("HOME", "/home");
+		
+		File filesDir = noContextMode ? new File(HOME_ENV) : context.getFilesDir();
 
 		String filesDirPath = filesDir.getAbsolutePath();
 		if (filesDirPath.length() < 2) {
@@ -127,19 +130,32 @@ public class Main {
 		// 兼容AIDE Pro
 		String packageName;
 		if (noContextMode) {
-			packageName = filesDir.getParentFile().getName();
+			File extractAppFile = extractAppFile(filesDir);
+			if( extractAppFile == null ){
+				System.out.printf("HOME路径错误 -> %s \n", filesDirPath);
+				return;
+			}
+			// 包名
+			packageName = extractAppFile.getName();
+			// 跟随 HOME变量
+			homeDir = new File(HOME_ENV);
+			// 修正 files文件夹
+			filesDir = new File(extractAppFile, "files");
+			
+			busyboxInstallDir = new File(HOME_ENV, "applets");
 		} else {
+			
 			packageName = context.getPackageName();
-		}
-
-		if ("aidepro.top".equals(packageName)) {
-			homeDir = new File(filesDir, "framework");
-			busyboxInstallDir = new File(filesDir, "usr/bin/applets");
-		} else {
-			initProotEnv(context);
-			homeDir = new File(filesDir, "home");
-			// 防止覆盖 Termux版的 usr/bin目录
-			busyboxInstallDir = new File(filesDir + "/usrx/bin");
+			
+			if ("aidepro.top".equals(packageName)) {
+				homeDir = new File(filesDir, "framework");
+				busyboxInstallDir = new File(filesDir, "usr/bin/applets");
+			} else {
+				initProotEnv(context);
+				homeDir = new File(filesDir, "home");
+				// 防止覆盖 Termux版的 usr/bin目录
+				busyboxInstallDir = new File(filesDir + "/usrx/bin");
+			}
 		}
 
 		if (homeDir.isFile()) {
@@ -250,9 +266,13 @@ public class Main {
 			// AIDE Ndk安装路径
 			File aideNdkInstallDir;
 			if (noContextMode) {
-				if (TextUtils.isEmpty(packageName) || !"aidepro.top".equals(packageName)
+				if (TextUtils.isEmpty(packageName)
+						// AIDE Pro
+						|| !"aidepro.top".equals(packageName)
+						// AIDE+
 						|| packageName.startsWith("io.github.zeroaicy.aide")) {
-					System.out.printf("包名计算错误 packageName -> %s，是无Context 模式 安装结束\n", packageName);
+					// 非AIDE
+					System.out.printf("包名错误(非AIDE) packageName -> %s，是无Context 模式 安装结束\n", packageName);
 					return;
 				}
 				aideNdkInstallDir = new File(filesDir.getParentFile(), "no_backup/ndksupport-1710240003");
@@ -489,6 +509,25 @@ public class Main {
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static File extractAppFile(File file) {
+		String path = file.getPath();
+
+		// 正则表达式匹配两种路径格式
+		Pattern pattern = Pattern.compile("^/data/(data|user/\\d+)/([^/]+)/.*");
+
+		Matcher matcher = pattern.matcher(path);
+		if (matcher.find()) {
+			String prefix = matcher.group(1); // 匹配到 data 或 user/数字
+			String pkgName = matcher.group(2); // 匹配到的包名
+
+			// 构建包所在路径
+			String basePath = "/data/" + prefix;
+
+			return new File(basePath, pkgName);
+		}
+		return null; // 未匹配到格式时返回null
 	}
 
 	//  proot 模式
