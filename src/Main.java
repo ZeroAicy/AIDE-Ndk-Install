@@ -57,7 +57,7 @@ public class Main {
 		return Build.VERSION.SDK_INT >= 26 ? ndkVersion + 2 : ndkVersion;
 	}
 
-	public static final String Version = "2.7.6";
+	public static final String Version = "2.7.8";
 
 	public static final String busyboxResourceName = "data/busybox";
 	public static final String ndkInstallShellResourceName = "data/ndk-install.sh";
@@ -72,9 +72,22 @@ public class Main {
 	// 
 	// Ndk包路径 需要特定的Ndk.zip包
 	// Zip 根目录为 android-ndk-xxx 例如 android-ndk-r24 android-ndk-r27b
-	// 唯一主要修改的
+	// ⚠️⚠️唯一主要修改的⚠️⚠️
 	static String NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/AIDE+Ndk/android-sdk/ndk/android-ndk-r27b-aarch64.zip";
 
+	/**
+	* 如何在终端使用呢
+	* 1. 将 bin/release/dex/classes.dex.zip 复制到终端 数据目录1
+	* 2. 与classes.dex.zip同目录 创建脚本
+	* 3. 脚本内容如下，用法 xxx Ndk.zip路径
+	
+	 #!/system/bin/sh
+	 BASEDIR=$(dirname "$0")
+	 DEX="$BASEDIR"/classes.dex.zip
+	 chmod -R 555 $DEX
+	 exec /system/bin/app_process -Djava.class.path="$DEX" /system/bin --nice-name="ndk_install" Main "$@"
+	 
+	*/
 	public static void main(String[] args) {
 		try {
 			install(args);
@@ -98,6 +111,7 @@ public class Main {
 		File ndkZipFile = new File(NdkZipFilePath);
 		if (!ndkZipFile.exists()) {
 			System.out.println("NdkZip文件不存,在请更改NdkZipFilePath变量");
+			System.out.println("用法: 传入 Ndk包路径");
 			return;
 		}
 
@@ -110,10 +124,10 @@ public class Main {
 		}
 
 		boolean noContextMode = context == null;
-		
+
 		// HOME环境变量
 		String HOME_ENV = System.getenv().getOrDefault("HOME", "/home");
-		
+
 		File filesDir = noContextMode ? new File(HOME_ENV) : context.getFilesDir();
 
 		String filesDirPath = filesDir.getAbsolutePath();
@@ -131,7 +145,7 @@ public class Main {
 		String packageName;
 		if (noContextMode) {
 			File extractAppFile = extractAppFile(filesDir);
-			if( extractAppFile == null ){
+			if (extractAppFile == null) {
 				System.out.printf("HOME路径错误 -> %s \n", filesDirPath);
 				return;
 			}
@@ -141,12 +155,12 @@ public class Main {
 			homeDir = new File(HOME_ENV);
 			// 修正 files文件夹
 			filesDir = new File(extractAppFile, "files");
-			
+
 			busyboxInstallDir = new File(HOME_ENV, "applets");
 		} else {
-			
+
 			packageName = context.getPackageName();
-			
+
 			if ("aidepro.top".equals(packageName)) {
 				homeDir = new File(filesDir, "framework");
 				busyboxInstallDir = new File(filesDir, "usr/bin/applets");
