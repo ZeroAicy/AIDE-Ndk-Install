@@ -1,0 +1,16 @@
+#!/system/bin/sh
+
+BASEDIR=`dirname "$0"`
+
+DEX="$HOME"/classes.dex.zip
+
+echo "复制安装器只\$HOME"
+cp -f $BASEDIR/../bin/release/dex/classes.dex.zip $DEX
+
+chmod -R 555 $DEX
+/system/bin/app_process -Djava.class.path="$DEX" /system/bin --nice-name="ndk_install" Main "$@"
+
+#删除
+echo "清除缓存"
+
+rm -f $DEX
