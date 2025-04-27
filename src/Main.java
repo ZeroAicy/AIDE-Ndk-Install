@@ -57,7 +57,7 @@ public class Main {
 		return Build.VERSION.SDK_INT >= 26 ? ndkVersion + 2 : ndkVersion;
 	}
 
-	public static final String Version = "2.7.8";
+	public static final String Version = "2.7.9";
 
 	public static final String busyboxResourceName = "data/busybox";
 	public static final String ndkInstallShellResourceName = "data/ndk-install.sh";
@@ -282,9 +282,9 @@ public class Main {
 			if (noContextMode) {
 				if (TextUtils.isEmpty(packageName)
 						// AIDE Pro
-						|| !"aidepro.top".equals(packageName)
+						&& !"aidepro.top".equals(packageName)
 						// AIDE+
-						|| packageName.startsWith("io.github.zeroaicy.aide")) {
+						&& !packageName.startsWith("io.github.zeroaicy.aide")) {
 					// 非AIDE
 					System.out.printf("包名错误(非AIDE) packageName -> %s，是无Context 模式 安装结束\n", packageName);
 					return;
