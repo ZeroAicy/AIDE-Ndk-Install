@@ -57,7 +57,7 @@ public class Main {
 		return Build.VERSION.SDK_INT >= 26 ? ndkVersion + 2 : ndkVersion;
 	}
 
-	public static final String Version = "2.8.0";
+	public static final String Version = "2.8.2";
 
 	public static final String busyboxResourceName = "data/busybox";
 	public static final String ndkInstallShellResourceName = "data/ndk-install.sh";
@@ -357,6 +357,9 @@ public class Main {
 		putCustomizeEnv(env);
 
 		List<String> argsList = new ArrayList<>();
+		
+		argsList.add("ash");
+		
 		argsList.add(ndkInstallFile.getAbsolutePath());
 
 		// proot模式
@@ -566,12 +569,10 @@ public class Main {
 		Main.PROOT_MODE = Build.VERSION.SDK_INT > Build.VERSION_CODES.P
 				&& currentPackageContext.getApplicationInfo().targetSdkVersion > Build.VERSION_CODES.P;
 
+		System.out.printf("⚠️⚠️注意\nPROOT模式 -> %s\n\n" , PROOT_MODE);
+
 		if (Main.PROOT_PATH == null) {
 			Main.PROOT_PATH = currentPackageContext.getApplicationInfo().nativeLibraryDir + "/libproot.so";
-		}
-
-		if (!Main.PROOT_MODE) {
-			return;
 		}
 
 		if (Main.PACKAGE_NAME_PATH == null) {
@@ -584,18 +585,15 @@ public class Main {
 		if (!cacheDirFile.exists()) {
 			cacheDirFile.mkdir();
 		}
+		String linkerconfigFilePath = "/linkerconfig/ld.config.txt";
+		File linkerconfigFile = new File(linkerconfigFilePath);
 		File ld_config_txt_file = new File(cacheDirFile, "ld.config.txt");
-		if (!ld_config_txt_file.exists() || ld_config_txt_file.length() == 0) {
+		if (linkerconfigFile.exists() && ld_config_txt_file.length() == 0) {
 			try {
-
-				String linkerconfigFilePath = "/linkerconfig/ld.config.txt";
-				File linkerconfigFile = new File(linkerconfigFilePath);
-				if (linkerconfigFile.exists()) {
-					InputStream input = new FileInputStream(linkerconfigFile);
-					OutputStream output = new FileOutputStream(ld_config_txt_file);
-					IOUtils.streamTransfer(input, output, true);
-					ld_config_txt_file.setReadable(true, false);
-				}
+				InputStream input = new FileInputStream(linkerconfigFile);
+				OutputStream output = new FileOutputStream(ld_config_txt_file);
+				IOUtils.streamTransfer(input, output, true);
+				ld_config_txt_file.setReadable(true, false);
 			} catch (Throwable e) {
 				e.printStackTrace();
 			}
