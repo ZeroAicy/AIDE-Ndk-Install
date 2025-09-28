@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import android.text.TextUtils;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import android.content.pm.*;
 
 public class Main {
 
@@ -57,7 +58,7 @@ public class Main {
 		return Build.VERSION.SDK_INT >= 26 ? ndkVersion + 2 : ndkVersion;
 	}
 
-	public static final String Version = "2.8.2";
+	public static final String Version = "2.8.3";
 
 	public static final String busyboxResourceName = "data/busybox";
 	public static final String ndkInstallShellResourceName = "data/ndk-install.sh";
@@ -76,18 +77,18 @@ public class Main {
 	static String NdkZipFilePath = "/storage/emulated/0/.MyAicy/源码备份/AIDE+/AIDE+Ndk/android-sdk/ndk/android-ndk-r27b-aarch64.zip";
 
 	/**
-	* 如何在终端使用呢
-	* 1. 将 bin/release/dex/classes.dex.zip 复制到终端 数据目录1
-	* 2. 与classes.dex.zip同目录 创建脚本
-	* 3. 脚本内容如下，用法 xxx Ndk.zip路径
+	 * 如何在终端使用呢
+	 * 1. 将 bin/release/dex/classes.dex.zip 复制到终端 数据目录1
+	 * 2. 与classes.dex.zip同目录 创建脚本
+	 * 3. 脚本内容如下，用法 xxx Ndk.zip路径
 	
 	 #!/system/bin/sh
 	 BASEDIR=$(dirname "$0")
 	 DEX="$BASEDIR"/classes.dex.zip
 	 chmod -R 555 $DEX
 	 exec /system/bin/app_process -Djava.class.path="$DEX" /system/bin --nice-name="ndk_install" Main "$@"
-	 
-	*/
+	
+	 */
 	public static void main(String[] args) {
 		try {
 			install(args);
@@ -107,6 +108,7 @@ public class Main {
 		}
 
 		System.out.println(String.format("Ndk Install Version: -> %s", Version));
+		System.out.println(String.format("NdkZipFilePath: -> %s", NdkZipFilePath));
 
 		File ndkZipFile = new File(NdkZipFilePath);
 		if (!ndkZipFile.exists()) {
@@ -119,7 +121,13 @@ public class Main {
 
 		try {
 			context = ContextUtil.getContext();
-		} catch (Throwable e) {
+		} 
+		catch (Throwable e) {
+			if( e instanceof ClassNotFoundException ){
+				e.printStackTrace();
+				System.out.println("类缺失，请对项目构建刷新");
+				return;
+			}
 			System.out.println("getContext 错误, 启用无Context模式");
 		}
 
@@ -228,6 +236,8 @@ public class Main {
 		if (TextUtils.isEmpty(Main.NDK_VERSION_NAME)) {
 			System.out.println("未能解析出Ndk版本信息 -> Main.NDK_VERSION_NAME");
 			System.out.println("请使用符合的 Ndk包");
+			return;
+		}if( true ){
 			return;
 		}
 
@@ -357,9 +367,9 @@ public class Main {
 		putCustomizeEnv(env);
 
 		List<String> argsList = new ArrayList<>();
-		
-		argsList.add("ash");
-		
+
+		argsList.add(busyboxInstallDir.getAbsolutePath() + "/ash");
+
 		argsList.add(ndkInstallFile.getAbsolutePath());
 
 		// proot模式
@@ -437,8 +447,23 @@ public class Main {
 
 		processBuilder.directory(busyboxInstallDir).command(args);
 
-		processBuilder.redirectError(new File(busyboxInstallDir, "installLog.txt"));
-		processBuilder.start();
+		File installLogTxtFile = new File(busyboxInstallDir, "installLog.txt");
+		processBuilder.redirectError(installLogTxtFile);
+		Process start = processBuilder.start();
+		// 等待 busybox 安装完毕
+		try {
+			start.waitFor();
+		} catch (InterruptedException e) {
+		}
+		if (start.exitValue() != 0) {
+			System.out.println("打印busybox安装日志");
+			try {
+				for (String error : IOUtils.readLines(new FileInputStream(installLogTxtFile))) {
+					System.out.println(error);
+				}
+			} catch (Throwable e) {
+			}
+		}
 	}
 
 	public static final ClassLoader curClassLoader = Main.class.getClassLoader();
@@ -566,10 +591,16 @@ public class Main {
 			return;
 		}
 
+		ApplicationInfo applicationInfo = currentPackageContext.getApplicationInfo();
+		int targetSdkVersion = applicationInfo.targetSdkVersion;
+		System.out.printf("安卓设备 -> %s\n", Build.DEVICE);
+		System.out.printf("安卓版本 -> %s\n", Build.VERSION.SDK_INT);
+		System.out.printf("AIDE targetSdkVersion -> %s\n", targetSdkVersion);
+		
 		Main.PROOT_MODE = Build.VERSION.SDK_INT > Build.VERSION_CODES.P
-				&& currentPackageContext.getApplicationInfo().targetSdkVersion > Build.VERSION_CODES.P;
+			|| targetSdkVersion > Build.VERSION_CODES.P;
 
-		System.out.printf("⚠️⚠️注意\nPROOT模式 -> %s\n\n" , PROOT_MODE);
+		System.out.printf("⚠️⚠️注意\nPROOT模式 -> %s\n\n", PROOT_MODE);
 
 		if (Main.PROOT_PATH == null) {
 			Main.PROOT_PATH = currentPackageContext.getApplicationInfo().nativeLibraryDir + "/libproot.so";
