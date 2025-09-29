@@ -237,8 +237,6 @@ public class Main {
 			System.out.println("未能解析出Ndk版本信息 -> Main.NDK_VERSION_NAME");
 			System.out.println("请使用符合的 Ndk包");
 			return;
-		}if( true ){
-			return;
 		}
 
 		// 解压busybox
