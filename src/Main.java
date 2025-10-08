@@ -58,7 +58,7 @@ public class Main {
 		return Build.VERSION.SDK_INT >= 26 ? ndkVersion + 2 : ndkVersion;
 	}
 
-	public static final String Version = "2.8.3";
+	public static final String Version = "2.8.4";
 
 	public static final String busyboxResourceName = "data/busybox";
 	public static final String ndkInstallShellResourceName = "data/ndk-install.sh";
@@ -121,9 +121,8 @@ public class Main {
 
 		try {
 			context = ContextUtil.getContext();
-		} 
-		catch (Throwable e) {
-			if( e instanceof ClassNotFoundException ){
+		} catch (Throwable e) {
+			if (e instanceof ClassNotFoundException) {
 				e.printStackTrace();
 				System.out.println("类缺失，请对项目构建刷新");
 				return;
@@ -165,6 +164,14 @@ public class Main {
 			filesDir = new File(extractAppFile, "files");
 
 			busyboxInstallDir = new File(HOME_ENV, "applets");
+
+			if ("com.termux".equals(packageName)) {
+				try {
+					Runtime.getRuntime().exec(System.getenv("SHELL"));
+				} catch (Throwable e) {
+					LD_PRELOAD_MODE = true;
+				}
+			}
 		} else {
 
 			packageName = context.getPackageName();
@@ -240,8 +247,10 @@ public class Main {
 		}
 
 		// 解压busybox
-		System.out.println("写入并安装busybox...");
-		writeBusybox(busyboxInstallDir);
+		if( !LD_PRELOAD_MODE ){
+			System.out.println("写入并安装busybox...");
+			writeBusybox(busyboxInstallDir);			
+		}
 
 		// 安装脚本路径
 		System.out.println("写入ndk-install.sh...");
@@ -365,8 +374,13 @@ public class Main {
 		putCustomizeEnv(env);
 
 		List<String> argsList = new ArrayList<>();
-
-		argsList.add(busyboxInstallDir.getAbsolutePath() + "/ash");
+		
+		if( LD_PRELOAD_MODE ){
+			argsList.add("/system/bin/linker64");
+			argsList.add(env.get("SHELL"));
+		}else{
+			argsList.add(busyboxInstallDir.getAbsolutePath() + "/ash");
+		}
 
 		argsList.add(ndkInstallFile.getAbsolutePath());
 
@@ -570,6 +584,8 @@ public class Main {
 		return null; // 未匹配到格式时返回null
 	}
 
+	//  LD_PRELOAD 模式
+	static boolean LD_PRELOAD_MODE;
 	//  proot 模式
 	static boolean PROOT_MODE;
 	//proot路径
@@ -594,9 +610,8 @@ public class Main {
 		System.out.printf("安卓设备 -> %s\n", Build.DEVICE);
 		System.out.printf("安卓版本 -> %s\n", Build.VERSION.SDK_INT);
 		System.out.printf("AIDE targetSdkVersion -> %s\n", targetSdkVersion);
-		
-		Main.PROOT_MODE = Build.VERSION.SDK_INT > Build.VERSION_CODES.P
-			|| targetSdkVersion > Build.VERSION_CODES.P;
+
+		Main.PROOT_MODE = Build.VERSION.SDK_INT > Build.VERSION_CODES.P || targetSdkVersion > Build.VERSION_CODES.P;
 
 		System.out.printf("⚠️⚠️注意\nPROOT模式 -> %s\n\n", PROOT_MODE);
 
@@ -653,7 +668,16 @@ public class Main {
 	}
 
 	private static void putCustomizeEnv(Map<String, String> environment) {
-
+		if (LD_PRELOAD_MODE) {
+			try {
+				environment.put("LD_PRELOAD", new File(environment.get("HOME"), "/../usr/lib/libtermux-exec.so").getCanonicalPath());
+				System.out.println(environment.get("LD_PRELOAD"));			
+			}
+			catch (IOException e) {
+				environment.put("LD_PRELOAD", "/data/data/com.termux/files/usr/lib/libtermux-exec.so");
+			}
+			return;
+		}
 		if (!Main.PROOT_MODE || PROOT_TMP_DIR == null) {
 			return;
 		}
